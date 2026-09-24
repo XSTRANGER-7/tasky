@@ -1,0 +1,78 @@
+# Local development stack:  cp .env.example .env && docker compose up --build
+#   web      http://localhost:5173   (SPA; /api is proxied to the API like on Vercel)
+#   api      http://localhost:8000   (/docs, /redoc, /health, /metrics)
+#   mailpit  http://localhost:8025   (catches every email the worker sends)
+name: incident-desk
+
+x-backend: &backend
+  build:
+    context: ./backend
+    args:
+      GIT_SHA: ${GIT_SHA:-dev}
+  image: incident-desk-api:dev
+  env_file: .env
+  environment:
+    # Inside the Compose network the database and mail catcher have fixed hostnames,
+    # whatever DATABASE_URL/SMTP_HOST say in .env for running on the host.
+    DATABASE_URL: postgresql+psycopg://app:app@db:5432/incidents
+    SMTP_HOST: mailpit
+    SMTP_PORT: "1025"
+    STORAGE_DIR: /data/attachments
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app # local only; production uses Neon
+      POSTGRES_DB: incidents
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d incidents"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports: ["127.0.0.1:8025:8025", "127.0.0.1:1025:1025"] # web inbox, SMTP
+
+  api:
+    <<: *backend
+    command: sh -c "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers"
+    depends_on:
+      db: { condition: service_healthy }
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: [attachments:/data/attachments] # uploads survive container restarts
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      start_period: 20s
+      retries: 5
+
+  worker:
+    <<: *backend
+    command: python -m app.notifications.worker
+    depends_on:
+      api: { condition: service_healthy } # api runs the migrations first
+      mailpit: { condition: service_started }
+    healthcheck:
+      disable: true # the image's HTTP check targets the API, not the worker
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api/v1
+    image: incident-desk-web:dev
+    ports: ["127.0.0.1:5173:8080"]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  pgdata: {}
+  attachments: {}

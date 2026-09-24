@@ -1,0 +1,501 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-base text-fg;
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Grid items may shrink below their content (a wide table or chart scrolls inside its
+     card instead of stretching the page sideways on phones). */
+  .grid > * {
+    min-width: 0;
+  }
+}
+
+@layer utilities {
+  /* Swipeable rows (tabs on phones) without a visible scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Form error: +-6 px, 3 cycles, once (spec 12.3). */
+  .animate-shake {
+    animation: shake 400ms var(--ease-out) 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  16%,
+  50%,
+  83% {
+    transform: translateX(-6px);
+  }
+  33%,
+  66% {
+    transform: translateX(6px);
+  }
+}
+
+/* ---------------------------------------------------------------- glass */
+/* Every surface frosts what is behind it (iOS materials). Menus and dialogs, which use
+   the elevated colour, are more opaque so their text stays crisp. */
+.bg-surface,
+.bg-elevated,
+[class*='bg-surface/'],
+[class*='bg-elevated/'] {
+  -webkit-backdrop-filter: saturate(180%) blur(var(--glass-blur, 24px));
+  backdrop-filter: saturate(180%) blur(var(--glass-blur, 24px));
+}
+
+/* The wallpaper behind the app: soft colour fields drifting slowly, so the glass has
+   something to blur. Fixed, behind everything, never interactive. */
+.app-wallpaper {
+  position: relative;
+  isolation: isolate;
+}
+.app-wallpaper::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(36% 40% at 14% 16%, rgb(var(--accent) / var(--wall-1, 0.2)), transparent 70%),
+    radial-gradient(34% 38% at 86% 12%, rgb(139 92 246 / var(--wall-2, 0.16)), transparent 70%),
+    radial-gradient(
+      38% 42% at 74% 88%,
+      rgb(236 72 153 / calc(var(--wall-3, 0.1) * 0.9)),
+      transparent 70%
+    ),
+    radial-gradient(
+      30% 34% at 18% 86%,
+      rgb(var(--status-resolved) / var(--wall-3, 0.1)),
+      transparent 70%
+    ),
+    radial-gradient(
+      26% 30% at 52% 46%,
+      rgb(56 189 248 / calc(var(--wall-3, 0.1) * 0.6)),
+      transparent 70%
+    );
+  filter: blur(46px);
+  animation: mesh-drift 90s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Phone tab bar glass, a little more solid than cards so icons stay crisp. */
+.tabbar-glass {
+  background: rgb(var(--bg-surface) / calc(var(--glass-alpha, 0.6) + 0.3));
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+}
+/* The middle piece has a round notch (radius 31 px) that the "+" sits in. Where it meets
+   the flat edge, an 8 px rounded shoulder (tangent to both) replaces the corner. */
+.tabbar-notch {
+  clip-path: path(
+    'M0 0 H 25 A 8 8 0 0 1 33 8 A 31 31 0 0 0 95 8 A 8 8 0 0 1 103 0 H 128 V 400 H 0 Z'
+  );
+}
+
+/* The top bar: a thin glass strip (iOS navigation bar). */
+.glass-bar {
+  background: rgb(var(--bg-canvas) / 0.55);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+}
+
+/* Light theme: the sheen on skeletons is brighter. */
+:root[data-theme='light'] {
+  --sheen: 0.55;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --sheen: 0.55;
+  }
+}
+
+/* Splash loader: a gradient arc turning around the logo. */
+.loader-ring {
+  background: conic-gradient(from 0deg, transparent 0 55%, #6e8bff 75%, #8b5cf6 90%, #ec4899);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  animation: spin 1.1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Aurora: the auth and landing pages' background, stronger than the app wallpaper. */
+.aurora {
+  isolation: isolate;
+  background: rgb(var(--bg-canvas));
+}
+.aurora::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(36% 40% at 18% 22%, rgb(var(--accent) / 0.32), transparent 70%),
+    radial-gradient(34% 38% at 82% 18%, rgb(139 92 246 / 0.28), transparent 70%),
+    radial-gradient(38% 42% at 70% 86%, rgb(236 72 153 / 0.16), transparent 70%),
+    radial-gradient(30% 34% at 22% 84%, rgb(var(--status-resolved) / 0.14), transparent 70%);
+  filter: blur(40px);
+  animation: mesh-drift 60s ease-in-out infinite alternate;
+}
+
+/* The iOS "thick material": strong blur, a bright rim and a soft lift. */
+.glass-card {
+  background: rgb(var(--bg-surface) / calc(var(--glass-alpha, 0.6) + 0.08));
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  backdrop-filter: saturate(180%) blur(30px);
+  border: 1px solid rgb(255 255 255 / 0.55);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 30px 80px -20px rgb(30 35 70 / 0.25);
+}
+[data-theme='dark'] .glass-card,
+:root:not([data-theme='light']) .glass-card {
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 30px 80px -20px rgb(0 0 0 / 0.6);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .glass-card {
+    border-color: rgb(255 255 255 / 0.55);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      0 30px 80px -20px rgb(30 35 70 / 0.25);
+  }
+}
+
+/* AI banner: a soft gradient glow in the corner of the glass. */
+.ai-banner::before {
+  content: '';
+  position: absolute;
+  inset: -40% auto auto -10%;
+  width: 55%;
+  height: 180%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgb(139 92 246 / 0.16), transparent);
+}
+
+/* Landing page accents. */
+.gradient-text {
+  background: linear-gradient(100deg, #6e8bff 0%, #8b5cf6 45%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.btn-glow {
+  background: linear-gradient(135deg, #6e8bff, #8b5cf6);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 10px 30px -8px rgb(110 139 255 / 0.6);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.btn-glow:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    0 14px 36px -8px rgb(139 92 246 / 0.7);
+}
+
+/* Quiet accent glow behind the auth card; static, so nothing to disable. */
+.auth-backdrop {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: rgb(var(--bg-canvas));
+}
+/* Gradient mesh drifting slowly (spec 12.3: 60 s loop, transform only, GPU). */
+.auth-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(38% 42% at 22% 28%, rgb(var(--accent) / 0.22), transparent 70%),
+    radial-gradient(30% 36% at 78% 22%, rgb(var(--status-resolved) / 0.12), transparent 70%),
+    radial-gradient(34% 40% at 64% 82%, rgb(var(--priority-high) / 0.1), transparent 70%);
+  filter: blur(24px);
+  animation: mesh-drift 60s ease-in-out infinite alternate;
+  will-change: transform;
+}
+/* A faint grid so the glass card has something to sit on. */
+.auth-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+}
+@keyframes mesh-drift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) rotate(8deg) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-3%, 4%, 0) rotate(-6deg) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+}
+/* The manual "Reduce motion" switch in Settings (spec 12.4) does the same. */
+html[data-motion='reduce'] *,
+html[data-motion='reduce'] *::before,
+html[data-motion='reduce'] *::after {
+  animation-iteration-count: 1 !important;
+  animation-duration: 0ms !important;
+  transition-duration: 0ms !important;
+}
+
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    fill 200ms var(--ease-out) !important;
+}
+
+/* ---------------------------------------------------------------- motion utilities */
+@layer utilities {
+  /* In-progress status dot: gentle breathing. */
+  .animate-pulse-soft {
+    animation: pulse-soft 2.4s ease-in-out infinite;
+  }
+  /* Breached SLA: slow 2 s opacity pulse (spec 12.3). */
+  .animate-pulse-slow {
+    animation: pulse-slow 2s ease-in-out infinite;
+  }
+  .shimmer {
+    background-color: rgb(var(--text-muted) / 0.12);
+    background-image: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgb(255 255 255 / var(--sheen, 0.07)) 50%,
+      transparent 80%
+    );
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes pulse-slow {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------------------------------------------------------------- markdown */
+.markdown {
+  @apply text-base leading-relaxed text-fg;
+  overflow-wrap: anywhere;
+}
+.markdown > * + * {
+  @apply mt-3;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  @apply font-medium;
+}
+.markdown h1 {
+  @apply text-lg;
+}
+.markdown h2 {
+  @apply text-md;
+}
+.markdown a {
+  @apply text-accent underline-offset-2 hover:underline;
+}
+.markdown ul {
+  @apply list-disc pl-5;
+}
+.markdown ol {
+  @apply list-decimal pl-5;
+}
+.markdown li + li {
+  @apply mt-1;
+}
+.markdown code {
+  @apply rounded bg-elevated px-1 py-0.5 font-mono text-[12.5px];
+}
+.markdown pre {
+  @apply overflow-x-auto rounded-control border border-border bg-canvas p-3;
+}
+.markdown pre code {
+  @apply bg-transparent p-0;
+}
+.markdown blockquote {
+  @apply border-l-2 border-border pl-3 text-fg-muted;
+}
+.markdown table {
+  @apply w-full text-sm;
+}
+.markdown th,
+.markdown td {
+  @apply border border-border px-2 py-1 text-left;
+}
+
+/* ---------------------------------------------------------------- scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--text-muted) / 0.3) transparent;
+}
+
+/* ---------------------------------------------------------------- popovers */
+.menu-content[data-state='open'] {
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: pop-in var(--dur-fast) var(--ease-out);
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+}
+
+/* ---------------------------------------------------------------- command palette */
+.palette-group [cmdk-group-heading] {
+  @apply px-3 pb-1 pt-2 text-xs font-medium text-fg-muted;
+}
+
+/* ---------------------------------------------------------------- notifications */
+.popover-content[data-state='open'] {
+  transform-origin: var(--radix-popover-content-transform-origin);
+  animation: pop-in var(--dur-fast) var(--ease-out);
+}
+/* The bell swings when something new arrives (reduced motion: no swing). */
+.bell-swing {
+  transform-origin: 50% 2px;
+  animation: bell-swing 900ms var(--ease-out);
+}
+@keyframes bell-swing {
+  0% {
+    transform: rotate(0);
+  }
+  15% {
+    transform: rotate(16deg);
+  }
+  30% {
+    transform: rotate(-14deg);
+  }
+  45% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bell-swing {
+    animation: none;
+  }
+}
+
+/* A row that arrived while the list was open (spec 12.3): accent tint fading over 1.5 s. */
+.animate-fresh-row > a {
+  animation: fresh-row 1.5s var(--ease-out);
+}
+@keyframes fresh-row {
+  from {
+    background-color: rgb(var(--accent) / 0.16);
+  }
+}
+
+/* Upload progress without a byte count: a bar sweeping across. */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* A form field just filled from an accepted AI suggestion (spec 12.3: flash for 600 ms). */
+.ai-flash {
+  animation: ai-flash 600ms var(--ease-out);
+}
+@keyframes ai-flash {
+  0%,
+  40% {
+    background-color: rgb(var(--accent) / 0.14);
+    outline: 2px solid rgb(var(--accent) / 0.5);
+    outline-offset: 4px;
+  }
+  100% {
+    outline-color: transparent;
+    outline-offset: 4px;
+  }
+}

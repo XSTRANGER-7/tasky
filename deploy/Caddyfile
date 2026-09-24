@@ -1,0 +1,25 @@
+# Caddy terminates TLS for the API domain (Let's Encrypt, auto-renewed) and proxies
+# to the api container. HTTP is redirected to HTTPS automatically.
+
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	# Prometheus metrics stay on the Docker network (spec section 13).
+	@internal path /metrics /metrics/*
+	respond @internal 404
+
+	reverse_proxy api:8000 {
+		# Stream SSE events immediately instead of buffering them.
+		flush_interval -1
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

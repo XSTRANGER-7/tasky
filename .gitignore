@@ -1,0 +1,40 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+frontend/playwright-report/
+frontend/test-results/
+
+# uploaded attachments (local storage backend; a Docker volume in compose)
+.data/
+
+# editors, tools, OS
+.claude/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# deploy/package.ps1 output
+tasky-backend.tar.gz

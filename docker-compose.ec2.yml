@@ -1,0 +1,104 @@
+# Tasky backend on one AWS EC2 instance, built on the server itself (no registry, no CI).
+#
+#   API    : FastAPI (uvicorn, 2 processes), runs database migrations on start
+#   worker : email outbox delivery, SLA breach checks, Supabase Auth copy
+#   caddy  : HTTPS for API_DOMAIN (Let's Encrypt, auto-renewed), proxies to the API
+#
+# Database and file storage are Supabase (DATABASE_URL, S3_* in .env), email is SMTP
+# (e.g. Gmail). The frontend is deployed separately (Vercel) and forwards /api/* here.
+#
+#   docker compose -f docker-compose.ec2.yml up -d --build      first start / update
+#   docker compose -f docker-compose.ec2.yml logs -f api worker  follow the logs
+#   docker compose -f docker-compose.ec2.yml ps                  health of each container
+#
+# No Supabase? `--profile local-db` adds a Postgres container; set
+# DATABASE_URL=postgresql+psycopg://tasky:<POSTGRES_PASSWORD>@db:5432/tasky in .env.
+name: tasky
+
+x-app: &app
+  # One image, built once (by the api service), used by both api and worker.
+  image: tasky-api:${TAG:-latest}
+  pull_policy: never # built on this server, never pulled from a registry
+  env_file: .env
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" } # keeps the disk from filling
+
+services:
+  api:
+    <<: *app
+    build:
+      context: ./backend
+      args:
+        GIT_SHA: ${GIT_SHA:-manual}
+    # Migrations first, then 2 uvicorn processes; --proxy-headers trusts Caddy's
+    # X-Forwarded-* (FORWARDED_ALLOW_IPS in .env) so rate limits see real client IPs.
+    command: >-
+      sh -c "alembic upgrade head &&
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers"
+    mem_limit: 600m
+    depends_on:
+      # Only when the local-db profile is on; ignored with Supabase.
+      db: { condition: service_healthy, required: false }
+    expose: ["8000"] # only reachable through Caddy, never directly from the internet
+    environment:
+      STORAGE_DIR: /data/attachments # used only when STORAGE_BACKEND=local
+    volumes:
+      - attachments:/data/attachments
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  worker:
+    <<: *app
+    command: python -m app.notifications.worker
+    mem_limit: 250m
+    depends_on:
+      api: { condition: service_healthy } # waits for the migrations
+    healthcheck:
+      disable: true
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN in .env (e.g. api.example.com)}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificates survive restarts
+      - caddy_config:/config
+    mem_limit: 96m
+    depends_on:
+      api: { condition: service_healthy }
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Optional: a Postgres on the same server (only with --profile local-db).
+  db:
+    profiles: ["local-db"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tasky
+      POSTGRES_DB: tasky
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env for local-db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasky -d tasky"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  attachments: {}
+  caddy_data: {}
+  caddy_config: {}
+  pgdata: {}

@@ -1,0 +1,20 @@
+{"title": "Checkout returns 500 for every customer", "description": "Since 09:40 all payment attempts fail with HTTP 500. Revenue is at zero.", "priority": "critical", "category": "payments"}
+{"title": "Refund emails arrive twice", "description": "Customers get two refund confirmation emails. Refund itself is issued once.", "priority": "low", "category": "messaging"}
+{"title": "orders-db replica lag above 10 minutes", "description": "Read replica is 12 minutes behind the primary; reports show stale numbers.", "priority": "high", "category": "database"}
+{"title": "Users cannot log in with SSO", "description": "Okta SAML login fails with an assertion error for everyone. Password login still works.", "priority": "high", "category": "auth"}
+{"title": "Production API is down", "description": "Every endpoint times out. Load balancer health checks failing across all zones.", "priority": "critical", "category": "infrastructure"}
+{"title": "Typo on the pricing page", "description": "'Anual plan' should read 'Annual plan'.", "priority": "low", "category": "frontend"}
+{"title": "Disk on backup server 92% full", "description": "Nightly backups will stop in about three days at the current rate.", "priority": "medium", "category": "infrastructure"}
+{"title": "VPN disconnects every hour", "description": "Staff on macOS are dropped from the VPN every 60 minutes and must reconnect.", "priority": "medium", "category": "network"}
+{"title": "Search results missing new products", "description": "Products added today do not appear in search; the index job last ran yesterday.", "priority": "medium", "category": "search"}
+{"title": "Possible data leak via public S3 bucket", "description": "A bucket with customer exports was found publicly readable.", "priority": "critical", "category": "infrastructure"}
+{"title": "Android app crashes on launch after update", "description": "Version 5.2 crashes immediately on Android 14 devices. iOS is fine.", "priority": "high", "category": "mobile"}
+{"title": "Slack alerts integration stopped posting", "description": "The webhook to #incidents returns 410 Gone since this morning.", "priority": "medium", "category": "integrations"}
+{"title": "Monthly revenue report export is slow", "description": "The CSV export for the finance report takes 4 minutes instead of 30 seconds.", "priority": "low", "category": "reporting"}
+{"title": "Grafana dashboard shows no data", "description": "The latency panels are empty since the Prometheus upgrade.", "priority": "medium", "category": "monitoring"}
+{"title": "Password reset links expire immediately", "description": "Reset links say 'expired' the moment they are opened. Users are locked out.", "priority": "high", "category": "auth"}
+{"title": "Connection pool exhausted on payments-db", "description": "Payments service logs 'remaining connection slots are reserved'; checkout intermittently failing.", "priority": "critical", "category": "database"}
+{"title": "Button misaligned on settings page in Safari", "description": "The save button overlaps the footer on Safari 17. Cosmetic only.", "priority": "low", "category": "frontend"}
+{"title": "Invoices generated with the wrong tax rate", "description": "German invoices since the 1st use 16% VAT instead of 19%.", "priority": "high", "category": "payments"}
+{"title": "Newsletter unsubscribe link broken", "description": "Clicking unsubscribe in the weekly newsletter shows a 404 page.", "priority": "medium", "category": "messaging"}
+{"title": "TLS certificate for status page expires tomorrow", "description": "The certificate on status.example.com expires in 24 hours; auto-renew failed.", "priority": "high", "category": "infrastructure"}

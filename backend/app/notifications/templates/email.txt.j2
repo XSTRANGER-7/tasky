@@ -1,0 +1,14 @@
+{{ headline }}
+
+{{ key }}: {{ title }}
+Priority: {{ priority_label }} · Status: {{ status_label }}
+
+{{ intro }}
+{% if snippet %}
+> {{ snippet | replace("\n", "\n> ") }}
+{% endif %}
+Open {{ key }}: {{ url }}
+
+--
+{{ actor_line }} · {{ when }}
+Tasky. Turn these emails off under Notifications.

@@ -1,0 +1,156 @@
+/*
+ * Design tokens (spec sections 11.2 and 12.2). Colours are space-separated RGB channels
+ * so Tailwind can apply opacity: rgb(var(--accent) / 0.4).
+ * Dark is the default; light applies via prefers-color-scheme or data-theme="light".
+ */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-canvas: 5 6 10; /* #05060A: near black, so the aurora glows */
+  --bg-surface: 22 24 34; /* #161822, shown as glass */
+  --bg-elevated: 30 33 45; /* #1E212D */
+  --border: rgba(255, 255, 255, 0.08);
+  /* Glass (iOS-like): surfaces are translucent and blur the wallpaper behind them. */
+  --glass-alpha: 0.5;
+  --glass-alpha-elevated: 0.9;
+  --glass-blur: 28px;
+  --wall-1: 0.34;
+  --wall-2: 0.28;
+  --wall-3: 0.16;
+  --text-primary: 236 238 245; /* #ECEEF5 */
+  --text-muted: 142 150 170; /* #8E96AA */
+  --accent: 118 142 255; /* #768EFF */
+  --danger: 255 99 99;
+
+  --priority-critical: 255 99 99; /* #FF6363 */
+  --priority-high: 255 159 67; /* #FF9F43 */
+  --priority-medium: 246 199 68; /* #F6C744 */
+  --priority-low: 142 150 170; /* #8E96AA */
+
+  --status-open: 118 142 255; /* #768EFF */
+  --status-in-progress: 246 199 68; /* #F6C744 */
+  --status-resolved: 61 220 151; /* #3DDC97 */
+  --status-closed: 98 106 124; /* #626A7C */
+  --sla-breached: 255 99 99; /* used at 12 % tint */
+
+  /* A line of light along the top edge, a faint rim, then a deep soft drop. */
+  --shadow-elevated:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 18px 44px -14px rgba(0, 0, 0, 0.65);
+
+  /* Chart series (validated: dataviz validate_palette, dark surface #12151C) */
+  --chart-created: 92 122 242; /* #5C7AF2 */
+  --chart-resolved: 39 166 115; /* #27A673 */
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --bg-canvas: 234 238 247; /* #EAEEF7: cool mist */
+    --bg-surface: 255 255 255;
+    --bg-elevated: 255 255 255;
+    --border: rgba(17, 24, 56, 0.08);
+    --glass-alpha: 0.6;
+    --glass-alpha-elevated: 0.94;
+    --glass-blur: 28px;
+    --wall-1: 0.36;
+    --wall-2: 0.3;
+    --wall-3: 0.2;
+    --text-primary: 17 20 33; /* #111421 */
+    --text-muted: 86 94 116; /* #565E74 */
+    --accent: 79 99 246; /* #4F63F6 */
+    --danger: 220 38 38;
+
+    --priority-critical: 220 38 38; /* #DC2626 */
+    --priority-high: 234 88 12; /* #EA580C */
+    --priority-medium: 202 138 4; /* #CA8A04 */
+    --priority-low: 100 116 139; /* #64748B */
+
+    --status-open: 79 99 246;
+    --status-in-progress: 202 138 4;
+    --status-resolved: 22 163 74;
+    --status-closed: 100 116 139;
+    --sla-breached: 220 38 38;
+
+    --shadow-elevated:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 2px rgba(17, 20, 33, 0.05),
+      0 16px 40px -12px rgba(40, 52, 120, 0.18);
+
+    /* Chart series (validated against #FFFFFF) */
+    --chart-created: 79 99 246; /* #4A6CF7 */
+    --chart-resolved: 22 163 74; /* #16A34A */
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg-canvas: 234 238 247; /* #EAEEF7: cool mist */
+  --bg-surface: 255 255 255;
+  --bg-elevated: 255 255 255;
+  --border: rgba(17, 24, 56, 0.08);
+  --glass-alpha: 0.6;
+  --glass-alpha-elevated: 0.94;
+  --glass-blur: 28px;
+  --wall-1: 0.36;
+  --wall-2: 0.3;
+  --wall-3: 0.2;
+  --text-primary: 17 20 33; /* #111421 */
+  --text-muted: 86 94 116; /* #565E74 */
+  --accent: 79 99 246; /* #4F63F6 */
+  --danger: 220 38 38;
+
+  --priority-critical: 220 38 38;
+  --priority-high: 234 88 12;
+  --priority-medium: 202 138 4;
+  --priority-low: 100 116 139;
+
+  --status-open: 79 99 246;
+  --status-in-progress: 202 138 4;
+  --status-resolved: 22 163 74;
+  --status-closed: 100 116 139;
+  --sla-breached: 220 38 38;
+
+  --shadow-elevated:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 2px rgba(17, 20, 33, 0.05),
+    0 16px 40px -12px rgba(40, 52, 120, 0.18);
+
+  --chart-created: 79 99 246;
+  --chart-resolved: 22 163 74;
+}
+
+/* Motion tokens (12.2). Framer Motion presets in src/lib/motion.ts mirror these. */
+:root {
+  --dur-instant: 80ms;
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+  --dur-data: 700ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms;
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-data: 0ms;
+  }
+}
+
+/* Theme previews on the settings page render both palettes side by side. */
+[data-preview='dark'] {
+  --bg-canvas: 11 13 18;
+  --bg-surface: 24 28 37;
+  --text-muted: 139 147 165;
+  --accent: 110 139 255;
+  --border: rgba(255, 255, 255, 0.12);
+}
+[data-preview='light'] {
+  --bg-canvas: 247 248 250;
+  --bg-surface: 255 255 255;
+  --text-muted: 94 102 120;
+  --accent: 74 108 247;
+  --border: rgba(0, 0, 0, 0.1);
+}

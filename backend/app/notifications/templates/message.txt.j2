@@ -1,0 +1,19 @@
+{{ headline }}
+
+{{ title }}
+
+Hi {{ recipient_name }},
+
+{{ intro }}
+{% if quote %}
+> {{ quote | replace("\n", "\n> ") }}
+{% endif %}
+{{ cta }}: {{ url }}
+{% if note %}
+
+{{ note }}
+{% endif %}
+
+--
+{{ when }}
+{{ footer }}

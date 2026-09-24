@@ -1,0 +1,11 @@
+# gitleaks runs in CI (see .github/workflows/ci.yml) with the default rules plus this
+# narrow allowlist. Only public, documented example values belong here.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Published test vectors, not credentials"
+# AWS's own SigV4 documentation example (tests/test_attachments.py checks our signer
+# against it): https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
+regexTarget = "match"
+regexes = ['''AKIAIOSFODNN7EXAMPLE''', '''wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY''']

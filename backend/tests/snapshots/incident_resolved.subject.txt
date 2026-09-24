@@ -1,0 +1,1 @@
+[TASK-142] Resolved: Database connection pool exhausted

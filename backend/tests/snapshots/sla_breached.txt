@@ -1,0 +1,12 @@
+Resolution SLA breached
+
+TASK-142: Database connection pool exhausted
+Priority: Critical · Status: Open
+
+This task has passed its resolution deadline and is still open.
+> Raised max_connections and added PgBouncer.
+Open TASK-142: https://incident-desk.example.com/tasks/TASK-142
+
+--
+By Mira Patel · 22 Sep 2026, 14:02 UTC
+Tasky. Turn these emails off under Notifications.

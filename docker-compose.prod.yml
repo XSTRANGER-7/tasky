@@ -1,0 +1,62 @@
+# Production on one AWS EC2 t3.micro: API + worker + Caddy (automatic HTTPS).
+# Postgres is Neon, email is Brevo, the SPA is Vercel. Images are built in CI and
+# pulled from GHCR -- never built on the 1 GB instance.
+#
+#   export TAG=v0.1.0 && docker compose -f docker-compose.prod.yml up -d
+#   Rollback:  TAG=<previous tag> docker compose -f docker-compose.prod.yml up -d
+name: incident-desk
+
+x-common: &common
+  image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER in .env (lowercase GitHub user)}/incident-desk-api:${TAG:-latest}
+  env_file: .env
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" } # keeps the 20 GB disk from filling
+
+services:
+  api:
+    <<: *common
+    command: sh -c "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers"  # trusts FORWARDED_ALLOW_IPS from .env
+    mem_limit: 450m
+    expose: ["8000"] # Docker network only; reachable solely through Caddy
+    environment:
+      STORAGE_DIR: /data/attachments # with STORAGE_BACKEND=local; use s3 for Supabase Storage
+    volumes: [attachments:/data/attachments]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 3s
+      start_period: 30s
+      retries: 3
+
+  worker:
+    <<: *common
+    command: python -m app.notifications.worker
+    mem_limit: 200m
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      disable: true
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificates survive restarts (no Let's Encrypt re-issue)
+      - caddy_config:/config
+    mem_limit: 64m
+    depends_on:
+      api: { condition: service_healthy }
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  attachments: {}
+  caddy_data: {}
+  caddy_config: {}
