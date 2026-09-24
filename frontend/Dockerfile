@@ -3,7 +3,7 @@
 # this image is what `docker compose up` and the E2E job run.
 
 # ---------------------------------------------------------------- build
-FROM node:20.18-alpine AS build
+FROM node:26.9-alpine AS build
 WORKDIR /src
 
 COPY package.json package-lock.json ./
