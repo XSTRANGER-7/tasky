@@ -16,11 +16,21 @@ SWAP_FILE=/swapfile
 
 log() { printf '\n==> %s\n' "$*"; }
 
+# Ubuntu mirrors sometimes replace a package between "update" and the download, which
+# fails with "404 Not Found". Refresh the package list and try again (up to 3 times).
+apt_retry() {
+  for attempt in 1 2 3; do
+    apt-get update -y && apt-get "$@" && return 0
+    echo "apt-get $1 failed (attempt ${attempt}/3); refreshing the package list and retrying" >&2
+    sleep 10
+  done
+  return 1
+}
+
 log "System update"
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get upgrade -y
-apt-get install -y ca-certificates curl gnupg git unattended-upgrades
+apt_retry upgrade -y --fix-missing
+apt_retry install -y ca-certificates curl gnupg git unattended-upgrades
 
 log "Docker Engine + compose plugin (official apt repository)"
 if ! command -v docker >/dev/null 2>&1; then
@@ -30,8 +40,7 @@ if ! command -v docker >/dev/null 2>&1; then
   . /etc/os-release
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${VERSION_CODENAME} stable" \
     > /etc/apt/sources.list.d/docker.list
-  apt-get update -y
-  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  apt_retry install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 usermod -aG docker "$APP_USER"
 systemctl enable --now docker
@@ -71,7 +80,9 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 PermitRootLogin no
 CONF
-systemctl reload ssh
+# Ubuntu 24.04 starts SSH on demand (ssh.socket), so ssh.service may not be running;
+# then the new settings simply apply to the next connection.
+systemctl try-reload-or-restart ssh 2>/dev/null || true
 
 log "App directory"
 install -d -o "$APP_USER" -g "$APP_USER" -m 0750 "$APP_DIR" "$APP_DIR/deploy"

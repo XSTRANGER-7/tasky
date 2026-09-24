@@ -19,9 +19,11 @@ die() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 [[ -d backend ]] || die "backend/ is missing. Upload the code first (see docs/deploy-ec2.md)."
 grep -q '^API_DOMAIN=.\+' .env || die "API_DOMAIN is empty in .env"
 # Unfilled placeholders look like <...> without an @ (a real "Name <me@x.com>" is fine).
-if grep -qE '<[^@>]*>' .env; then
-  grep -nE '<[^@>]*>' .env | sed 's/=.*/=<...>/' >&2
-  die "Some values in .env still contain <placeholders> (listed above)."
+# Only settings are checked (NAME=value lines); comments starting with # are ignored.
+PLACEHOLDER='^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*=.*<[^@>]*>'
+if grep -qE "$PLACEHOLDER" .env; then
+  grep -nE "$PLACEHOLDER" .env | sed 's/=.*/=<...>/' >&2
+  die "Fill in these settings in .env (they still contain <placeholders>): nano .env"
 fi
 [[ $(stat -c %a .env) == 600 ]] || { chmod 600 .env && echo "(set .env to chmod 600)"; }
 
