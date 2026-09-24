@@ -36,7 +36,11 @@ if [[ "${1:-}" != "--no-build" ]]; then
 fi
 
 log "Starting api, worker and caddy"
-$COMPOSE up -d --remove-orphans
+if ! $COMPOSE up -d --remove-orphans; then
+  log "The API did not start. Its last log lines:"
+  $COMPOSE logs --tail 60 api || true
+  die "Fix the error above (usually DATABASE_URL in .env), then: bash deploy/deploy.sh --no-build"
+fi
 
 log "Waiting for the API to report healthy"
 for i in $(seq 1 40); do
