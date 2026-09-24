@@ -2,7 +2,7 @@
 # One image, two commands: the API (uvicorn) and the notification worker.
 
 # ---------------------------------------------------------------- build: dependencies only
-FROM python:3.12.8-slim-bookworm AS build
+FROM python:3.14.7-slim-bookworm AS build
 
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -20,7 +20,7 @@ RUN python -c "import tomllib; print('\n'.join(tomllib.load(open('pyproject.toml
     && pip install -r requirements.txt
 
 # ---------------------------------------------------------------- runtime
-FROM python:3.12.8-slim-bookworm AS runtime
+FROM python:3.14.7-slim-bookworm AS runtime
 
 ARG GIT_SHA=dev
 ENV PATH="/opt/venv/bin:$PATH" \
