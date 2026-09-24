@@ -87,7 +87,9 @@ services:
     environment:
       POSTGRES_USER: tasky
       POSTGRES_DB: tasky
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env for local-db}
+      # Not required up front: Compose checks every service, even ones whose profile is
+      # off. Postgres itself refuses to start without it when local-db is used.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - pgdata:/var/lib/postgresql/data
     mem_limit: 256m
