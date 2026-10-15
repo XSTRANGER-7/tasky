@@ -58,7 +58,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         env:
           TAG: ${{ env.TAG }}
         with:
